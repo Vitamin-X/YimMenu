@@ -194,7 +194,7 @@ namespace big
 						}
 
 						g_model_preview_service->stop_preview();
-						ENTITY::SET_ENTITY_AS_NO_LONGER_NEEDED(&veh);
+					
 					});
 					ImGui::PopID();
 
