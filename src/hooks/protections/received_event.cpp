@@ -30,7 +30,7 @@ namespace big
 	{
 		for (const auto& info : g_pointers->m_gta.m_weapon_info_manager->m_item_infos)
 		{
-			if (info && info->m_name == hash && info->GetClassId() == RAGE_JOAAT("cweaponinfo"))
+			if (info && info->m_name == hash && info->GetClassId() == "cweaponinfo"_J)
 			{
 				return true;
 			}
@@ -355,7 +355,7 @@ namespace big
 			&& player->m_player_info->m_ped && player->m_player_info->m_ped->m_net_object
 			&& ownerNetId != player->m_player_info->m_ped->m_net_object->m_object_id && !offset_object)
 		{
-			g_notification_service->push_error("WARNING"_T.data(),
+			g_notification_service.push_error("WARNING"_T.data(),
 				std::vformat("BLAMED_FOR_EXPLOSION"_T,
 					std::make_format_args(player->get_name(),
 						reinterpret_cast<CPed*>(entity)->m_player_info->m_net_player_data.m_name)));
@@ -533,9 +533,12 @@ namespace big
 				    || personal_vehicle == veh              //Or we're in our personal vehicle.
 				    || self::spawned_vehicles.contains(net_id)) // Or it's a vehicle we spawned.
 				{
-					g_pointers->m_gta.m_send_event_ack(event_manager, source_player, target_player, event_index, event_handled_bitset); // Tell them to get bent.
-					g.reactions.request_control_event.process(plyr);
-					return;
+					if (g_local_player->m_vehicle->m_driver != source_player->m_player_info->m_ped) //This will block hackers who are not in the car but still want control.
+					{
+						g_pointers->m_gta.m_send_event_ack(event_manager, source_player, target_player, event_index, event_handled_bitset); // Tell them to get bent.
+						g.reactions.request_control_event.process(plyr);
+						return;
+					}
 				}
 			}
 			buffer->Seek(0);
@@ -602,7 +605,7 @@ namespace big
 			std::int16_t net_id = buffer->Read<std::int16_t>(13);
 			Hash hash           = buffer->Read<Hash>(32);
 
-			if (hash == RAGE_JOAAT("WEAPON_UNARMED"))
+			if (hash == "WEAPON_UNARMED"_J)
 			{
 				notify::crash_blocked(source_player, "remove unarmed");
 				g_pointers->m_gta.m_send_event_ack(event_manager, source_player, target_player, event_index, event_handled_bitset);
@@ -612,7 +615,7 @@ namespace big
 			if (g_local_player && g_local_player->m_net_object && g_local_player->m_net_object->m_object_id == net_id)
 			{
 				weapon_item weapon = g_gta_data_service->weapon_by_hash(hash);
-				g_notification_service->push_warning("PROTECTIONS"_T.data(),
+				g_notification_service.push_warning("PROTECTIONS"_T.data(),
 					std::format("{} {} {}.", source_player->get_name(), "REMOVE_WEAPON_ATTEMPT_MESSAGE"_T, weapon.m_display_name));
 				g_pointers->m_gta.m_send_event_ack(event_manager, source_player, target_player, event_index, event_handled_bitset);
 				return;
@@ -629,7 +632,7 @@ namespace big
 			if (g_local_player && g_local_player->m_net_object && g_local_player->m_net_object->m_object_id == net_id)
 			{
 				weapon_item weapon = g_gta_data_service->weapon_by_hash(hash);
-				g_notification_service->push_warning("PROTECTIONS"_T.data(),
+				g_notification_service.push_warning("PROTECTIONS"_T.data(),
 				    std::format("{} {} {}.", source_player->get_name(), "GIVE_WEAPON_ATTEMPT_MESSAGE"_T, weapon.m_display_name));
 				g_pointers->m_gta.m_send_event_ack(event_manager, source_player, target_player, event_index, event_handled_bitset);
 				return;
@@ -707,7 +710,7 @@ namespace big
 
 			uint32_t sound_hash = buffer->Read<uint32_t>(32);
 
-			if (sound_hash == RAGE_JOAAT("Remote_Ring") && plyr)
+			if (sound_hash == "Remote_Ring"_J && plyr)
 			{
 				g.reactions.sound_spam.process(plyr);
 				return;

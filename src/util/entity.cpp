@@ -4,7 +4,7 @@ namespace big::entity
 {
 	void cage_ped(Ped ped)
 	{
-		Hash hash = RAGE_JOAAT("prop_gold_cont_01");
+		Hash hash = "prop_gold_cont_01"_J;
 
 		Vector3 location = ENTITY::GET_ENTITY_COORDS(ped, true);
 		OBJECT::CREATE_OBJECT(hash, location.x, location.y, location.z - 1.f, true, false, false);
@@ -12,18 +12,24 @@ namespace big::entity
 
 	void clean_ped(Ped ped)
 	{
-		Ped player_ped = self::ped;
+		PED::CLEAR_PED_BLOOD_DAMAGE(ped);
+		PED::CLEAR_PED_WETNESS(ped);
+		PED::CLEAR_PED_ENV_DIRT(ped);
+		PED::RESET_PED_VISIBLE_DAMAGE(ped);
 
-		PED::CLEAR_PED_BLOOD_DAMAGE(player_ped);
-		PED::CLEAR_PED_WETNESS(player_ped);
-		PED::CLEAR_PED_ENV_DIRT(player_ped);
-		PED::RESET_PED_VISIBLE_DAMAGE(player_ped);
+		// https://forum.cfx.re/t/information-needed-to-clear-visible-player-damage-scars-etc/283216
+		// https://docs.fivem.net/natives/?_0x397C38AA7B4A5F83
+		for (int i = 0; i <= 5; ++i)
+			PED::CLEAR_PED_DAMAGE_DECAL_BY_ZONE(ped, i, "ALL");
 	}
 
 	void delete_entity(Entity& ent, bool force)
 	{
 		if (!ENTITY::DOES_ENTITY_EXIST(ent))
+		{
+			ent = NULL;
 			return;
+		}
 		if (!force && !take_control_of(ent))
 		{
 			LOG(VERBOSE) << "Failed to take control of entity before deleting";

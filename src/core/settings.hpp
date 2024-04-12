@@ -122,9 +122,11 @@ namespace big
 				int thread_id                  = 0;
 				std::int16_t syncing_object_id = -1;
 			} fuzzer{};
+
+			bool external_console = true;
 			bool window_hook = false;
 
-			NLOHMANN_DEFINE_TYPE_INTRUSIVE(debug, logs, window_hook)
+			NLOHMANN_DEFINE_TYPE_INTRUSIVE(debug, logs, external_console, window_hook)
 		} debug{};
 
 		struct tunables
@@ -334,7 +336,6 @@ namespace big
 			bool proof_melee                  = false;
 			bool proof_explosion              = false;
 			bool proof_steam                  = false;
-			bool proof_drown                  = false;
 			bool proof_water                  = false;
 			uint32_t proof_mask               = 0;
 			bool mobile_radio                 = false;
@@ -386,7 +387,7 @@ namespace big
 				NLOHMANN_DEFINE_TYPE_INTRUSIVE(super_hero_fly, gradual, explosions, auto_land, charge, ptfx, fly_speed, initial_launch)
 			} super_hero_fly{};
 
-			NLOHMANN_DEFINE_TYPE_INTRUSIVE(self, ipls, ptfx_effects, clean_player, force_wanted_level, passive, free_cam, invisibility, local_visibility, never_wanted, no_ragdoll, noclip, noclip_aim_speed_multiplier, noclip_speed_multiplier, off_radar, super_run, no_collision, unlimited_oxygen, no_water_collision, wanted_level, god_mode, part_water, proof_bullet, proof_fire, proof_collision, proof_melee, proof_explosion, proof_steam, proof_drown, proof_water, proof_mask, mobile_radio, fast_respawn, auto_tp, super_jump, beast_jump, healthregen, healthregenrate, hud, superman, custom_weapon_stop, prompt_ambient_animations, persist_outfit, persist_outfits_mis, interaction_menu_freedom, super_hero_fly)
+			NLOHMANN_DEFINE_TYPE_INTRUSIVE(self, ipls, ptfx_effects, clean_player, force_wanted_level, passive, free_cam, invisibility, local_visibility, never_wanted, no_ragdoll, noclip, noclip_aim_speed_multiplier, noclip_speed_multiplier, off_radar, super_run, no_collision, unlimited_oxygen, no_water_collision, wanted_level, god_mode, part_water, proof_bullet, proof_fire, proof_collision, proof_melee, proof_explosion, proof_steam, proof_water, proof_mask, mobile_radio, fast_respawn, auto_tp, super_jump, beast_jump, healthregen, healthregenrate, hud, superman, custom_weapon_stop, prompt_ambient_animations, persist_outfit, persist_outfits_mis, interaction_menu_freedom, super_hero_fly)
 		} self{};
 
 		struct session
@@ -453,6 +454,7 @@ namespace big
 
 		struct settings
 		{
+			bool onboarding_complete = false;
 			bool dev_dlc = false;
 
 			struct hotkeys
@@ -489,7 +491,7 @@ namespace big
 				NLOHMANN_DEFINE_TYPE_INTRUSIVE(hotkeys, editing_menu_toggle, menu_toggle, teleport_waypoint, teleport_objective, teleport_selected, teleport_pv, noclip, vehicle_flymode, bringvehicle, invis, heal, fill_inventory, skip_cutscene, freecam, superrun, passive, superjump, beastjump, invisveh, localinvisveh, fill_ammo, fast_quit, cmd_excecutor, repairpv, open_vehicle_controller, clear_wanted, random_ped_components)
 			} hotkeys{};
 
-			NLOHMANN_DEFINE_TYPE_INTRUSIVE(settings, hotkeys, dev_dlc)
+			NLOHMANN_DEFINE_TYPE_INTRUSIVE(settings, hotkeys, dev_dlc, onboarding_complete)
 		} settings{};
 
 		struct spawn_vehicle

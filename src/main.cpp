@@ -47,14 +47,14 @@ namespace big
 		{
 			for (rage::game_skeleton_update_base* update_node = mode->m_head; update_node; update_node = update_node->m_next)
 			{
-				if (update_node->m_hash != RAGE_JOAAT("Common Main"))
+				if (update_node->m_hash != "Common Main"_J)
 					continue;
 				rage::game_skeleton_update_group* group = reinterpret_cast<rage::game_skeleton_update_group*>(update_node);
 				for (rage::game_skeleton_update_base* group_child_node = group->m_head; group_child_node;
 				     group_child_node                                  = group_child_node->m_next)
 				{
 					// TamperActions is a leftover from the old AC, but still useful to block anyway
-					if (group_child_node->m_hash != 0xA0F39FB6 && group_child_node->m_hash != RAGE_JOAAT("TamperActions"))
+					if (group_child_node->m_hash != 0xA0F39FB6 && group_child_node->m_hash != "TamperActions"_J)
 						continue;
 					patched = true;
 					//LOG(INFO) << "Patching problematic skeleton update";
@@ -67,7 +67,7 @@ namespace big
 
 		for (rage::skeleton_data& i : g_pointers->m_gta.m_game_skeleton->m_sys_data)
 		{
-			if (i.m_hash != 0xA0F39FB6 && i.m_hash != RAGE_JOAAT("TamperActions"))
+			if (i.m_hash != 0xA0F39FB6 && i.m_hash != "TamperActions"_J)
 				continue;
 			i.m_init_func     = reinterpret_cast<uint64_t>(g_pointers->m_gta.m_nullsub);
 			i.m_shutdown_func = reinterpret_cast<uint64_t>(g_pointers->m_gta.m_nullsub);
@@ -142,6 +142,7 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 		    0,
 		    [](PVOID) -> DWORD {
 			    auto handler = exception_handler();
+			    std::srand(std::chrono::system_clock::now().time_since_epoch().count());
 
 			    while (!FindWindow("grcWindow", nullptr))
 				    std::this_thread::sleep_for(100ms);
@@ -150,11 +151,9 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 			    base_dir /= "YimMenu";
 			    g_file_manager.init(base_dir);
 
-			    auto logger_instance = std::make_unique<logger>("YimMenu", g_file_manager.get_project_file("./cout.log"));
-
-			    EnableMenuItem(GetSystemMenu(GetConsoleWindow(), 0), SC_CLOSE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
-
-			    std::srand(std::chrono::system_clock::now().time_since_epoch().count());
+			    g.init(g_file_manager.get_project_file("./settings.json"));
+			    g_log.initialize("YimMenu", g_file_manager.get_project_file("./cout.log"), g.debug.external_console);
+			    LOG(INFO) << "Settings Loaded and logger initialized.";
 
 			    LOG(INFO) << "Yim's Menu Initializing";
 			    LOGF(INFO, "Git Info\n\tBranch:\t{}\n\tHash:\t{}\n\tDate:\t{}", version::GIT_BRANCH, version::GIT_SHA1, version::GIT_DATE);
@@ -178,9 +177,6 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 
 			    auto thread_pool_instance = std::make_unique<thread_pool>();
 			    LOG(INFO) << "Thread pool initialized.";
-
-			    g.init(g_file_manager.get_project_file("./settings.json"));
-			    LOG(INFO) << "Settings Loaded.";
 
 			    auto pointers_instance = std::make_unique<pointers>();
 			    LOG(INFO) << "Pointers initialized.";
@@ -214,7 +210,6 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 			    auto context_menu_service_instance      = std::make_unique<context_menu_service>();
 			    auto custom_text_service_instance       = std::make_unique<custom_text_service>();
 			    auto mobile_service_instance            = std::make_unique<mobile_service>();
-			    auto notification_service_instance      = std::make_unique<notification_service>();
 			    auto pickup_service_instance            = std::make_unique<pickup_service>();
 			    auto player_service_instance            = std::make_unique<player_service>();
 			    auto gta_data_service_instance          = std::make_unique<gta_data_service>();
@@ -231,6 +226,9 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 			    auto xml_vehicles_service_instance      = std::make_unique<xml_vehicles_service>();
 			    auto xml_maps_service_instance          = std::make_unique<xml_map_service>();
 			    LOG(INFO) << "Registered service instances...";
+
+				g_notification_service.initialise();
+				LOG(INFO) << "Finished initialising services.";
 
 			    g_script_mgr.add_script(std::make_unique<script>(&gui::script_func, "GUI", false));
 
@@ -266,7 +264,11 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 			    g_running = true;
 
 			    while (g_running)
+			    {
+				    g.attempt_save();
+
 				    std::this_thread::sleep_for(500ms);
+			    }
 
 			    g_script_mgr.remove_all_scripts();
 			    LOG(INFO) << "Scripts unregistered.";
@@ -340,8 +342,7 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 			    LOG(INFO) << "Thread pool uninitialized.";
 
 			    LOG(INFO) << "Farewell!";
-			    logger_instance->destroy();
-			    logger_instance.reset();
+			    g_log.destroy();
 
 			    CloseHandle(g_main_thread);
 			    FreeLibraryAndExitThread(g_hmodule, 0);
